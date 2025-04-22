@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - uses: przeprogramowani/ai-reviewer@master
+      - uses: przeprogramowani/ai-action@master
         with:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
 ```
