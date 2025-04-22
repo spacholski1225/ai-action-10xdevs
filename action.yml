@@ -16,8 +16,12 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Install deps
+      run: npm install
+      shell: bash
+
     - name: Run action
-      run: node ${GITHUB_ACTION_PATH}/dist/use-ai.js
+      run: node ${GITHUB_ACTION_PATH}/src/use-ai.js
       shell: bash
       env:
         GOOGLE_API_KEY: ${{ inputs.GOOGLE_API_KEY }}
