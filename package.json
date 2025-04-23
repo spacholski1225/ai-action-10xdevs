@@ -5,7 +5,7 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "build": "npx rolldown src/index.js --file dist/index.js"
+    "build": "npx rolldown -c rolldown.config.js"
   },
   "repository": {
     "type": "git",
@@ -22,5 +22,8 @@
     "@actions/github": "6.0.0",
     "@google/genai": "0.9.0",
     "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "rolldown": "1.0.0-beta.8"
   }
 }

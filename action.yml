@@ -19,15 +19,13 @@ runs:
     - name: Get PR diff and run AI review
       id: ai-review
       shell: bash
-      run: |
-        cd ${GITHUB_ACTION_PATH}
-        node dist/index.js
+      run: node ${GITHUB_ACTION_PATH}/dist/index.js
       env:
         GOOGLE_API_KEY: ${{ inputs.GOOGLE_API_KEY }}
         GITHUB_TOKEN: ${{ github.token }}
 
     - name: Comment on PR
-      if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
+      if: github.event_name == 'pull_request'
       shell: bash
       run: |
         REVIEW_CONTENT=$(cat ${GITHUB_ACTION_PATH}/ai_review.txt)
