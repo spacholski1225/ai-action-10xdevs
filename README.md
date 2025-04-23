@@ -25,7 +25,7 @@ jobs:
   review:
     runs-on: ubuntu-latest
     steps:
-      - uses: your-username/10x-ai-action@main
+      - uses: przeprogramowani/ai-action@master
         with:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
 ```
