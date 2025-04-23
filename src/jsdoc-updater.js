@@ -25,9 +25,8 @@ export async function updateJSDocs(fileContent, apiKey) {
   // Initialize Google AI
   const ai = new GoogleGenAI({apiKey});
 
-  try {
-    // Updated prompt:
-    const prompt = `
+  // Updated prompt:
+  const prompt = `
 You are an AI assistant specialized in JavaScript documentation.
 Your task is to analyze the provided JavaScript code and ensure JSDoc comments are present and accurate for functions, classes, and complex logic blocks.
 
@@ -45,38 +44,30 @@ ${fileContent}
 \`\`\`
 `;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-preview-04-17",
-      contents: prompt,
-    });
-    const updatedContent = response.text;
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash-preview-04-17",
+    contents: prompt,
+  });
+  const updatedContent = response.text;
 
-    // Basic validation: Check if the response looks like code
-    if (
-      !updatedContent ||
-      (!updatedContent.includes("function") &&
-        !updatedContent.includes("class") &&
-        !updatedContent.includes("const") &&
-        !updatedContent.includes("let"))
-    ) {
-      console.warn(
-        "AI response did not seem like valid code. Returning original content."
-      );
-      return fileContent; // Return original content if response is suspicious
-    }
-
-    // Clean up potential markdown code fences if the model added them
-    const cleanedContent = updatedContent
-      .replace(/^```javascript\n/, "")
-      .replace(/\n```$/, "");
-
-    return cleanedContent;
-  } catch (error) {
-    console.error("Error during AI JSDoc update:", error);
-    // Decide if throwing or returning original content is better
-    // For robustness in an action, maybe return original content and log error
-    console.error("Returning original file content due to error.");
-    return fileContent;
-    // throw error; // Or re-throw if failure should stop the action
+  // Basic validation: Check if the response looks like code
+  if (
+    !updatedContent ||
+    (!updatedContent.includes("function") &&
+      !updatedContent.includes("class") &&
+      !updatedContent.includes("const") &&
+      !updatedContent.includes("let"))
+  ) {
+    console.warn(
+      "AI response did not seem like valid code. Returning original content."
+    );
+    return fileContent; // Return original content if response is suspicious
   }
+
+  // Clean up potential markdown code fences if the model added them
+  const cleanedContent = updatedContent
+    .replace(/^```javascript\n/, "")
+    .replace(/\n```$/, "");
+
+  return cleanedContent;
 }
