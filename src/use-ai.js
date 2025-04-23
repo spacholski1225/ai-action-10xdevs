@@ -33,7 +33,12 @@ async function main() {
       You are allowed to use "N/A" for cases where the PR does not bring any changes in given area.
       `,
   });
+
+  // Print the response text to stdout (will be captured to file in action.yml)
   console.log(response.text);
 }
 
-main();
+main().catch((error) => {
+  console.error("Error during AI review:", error);
+  process.exit(1);
+});
