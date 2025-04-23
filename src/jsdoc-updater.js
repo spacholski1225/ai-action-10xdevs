@@ -23,8 +23,7 @@ export async function updateJSDocs(fileContent, apiKey) {
   }
 
   // Initialize Google AI
-  const genAI = new GoogleGenAI(apiKey);
-  const model = genAI.getGenerativeModel({model: "gemini-1.5-flash"}); // Using gemini-1.5-flash as it's good for this kind of task
+  const ai = new GoogleGenAI({apiKey});
 
   try {
     // Updated prompt:
@@ -46,9 +45,11 @@ ${fileContent}
 \`\`\`
 `;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const updatedContent = response.text();
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+    });
+    const updatedContent = response.text;
 
     // Basic validation: Check if the response looks like code
     if (

@@ -76361,8 +76361,7 @@ async function updateJSDocs(fileContent, apiKey) {
 		return fileContent;
 	}
 	if (!apiKey) throw new Error("Google API key is required");
-	const genAI = new import_node.GoogleGenAI(apiKey);
-	const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+	const ai = new import_node.GoogleGenAI({ apiKey });
 	try {
 		const prompt = `
 You are an AI assistant specialized in JavaScript documentation.
@@ -76381,9 +76380,11 @@ JavaScript code:
 ${fileContent}
 \`\`\`
 `;
-		const result = await model.generateContent(prompt);
-		const response = await result.response;
-		const updatedContent = response.text();
+		const response = await ai.models.generateContent({
+			model: "gemini-2.5-flash",
+			contents: prompt
+		});
+		const updatedContent = response.text;
 		if (!updatedContent || !updatedContent.includes("function") && !updatedContent.includes("class") && !updatedContent.includes("const") && !updatedContent.includes("let")) {
 			console.warn("AI response did not seem like valid code. Returning original content.");
 			return fileContent;
