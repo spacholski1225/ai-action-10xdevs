@@ -19,7 +19,7 @@ runs:
     - name: Get PR diff and run AI review
       id: ai-review
       shell: bash
-      run: node ${GITHUB_ACTION_PATH}/dist/index.js
+      run: node ${GITHUB_ACTION_PATH}/dist/index.cjs
       env:
         GOOGLE_API_KEY: ${{ inputs.GOOGLE_API_KEY }}
         GITHUB_TOKEN: ${{ github.token }}
