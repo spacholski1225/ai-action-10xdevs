@@ -1,7 +1,7 @@
 import * as core from "@actions/core";
 import * as fs from "fs";
 import {getPRDiff, extractPRNumber, getRepoInfo} from "./github-utils.js";
-import {performAICodeReview} from "./use-ai.js";
+import {performAICodeReview} from "./code-review.js";
 
 /**
  * Main function that orchestrates the PR diff retrieval and AI review
