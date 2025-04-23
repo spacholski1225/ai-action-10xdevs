@@ -28,7 +28,7 @@ export async function updateJSDocs(fileContent, apiKey) {
   // Updated prompt:
   const prompt = `
 You are an AI assistant specialized in JavaScript documentation.
-Your task is to analyze the provided JavaScript code and ensure JSDoc comments are present and accurate for functions, classes, and complex logic blocks.
+Your task is to analyze the provided JavaScript code and ensure JSDoc comments are present and accurate for functions, classes, and complex logic blocks. Do not comment self-explanatory code or one-liners.
 
 **Instructions:**
 1.  **Add missing JSDocs:** If a function, class, or significant logic block lacks documentation, add a complete JSDoc comment.
@@ -45,7 +45,7 @@ ${fileContent}
 `;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash-preview-04-17",
+    model: "gemini-2.0-flash",
     contents: prompt,
   });
   const updatedContent = response.text;

@@ -76362,10 +76362,9 @@ async function updateJSDocs(fileContent, apiKey) {
 	}
 	if (!apiKey) throw new Error("Google API key is required");
 	const ai = new import_node.GoogleGenAI({ apiKey });
-	try {
-		const prompt = `
+	const prompt = `
 You are an AI assistant specialized in JavaScript documentation.
-Your task is to analyze the provided JavaScript code and ensure JSDoc comments are present and accurate for functions, classes, and complex logic blocks.
+Your task is to analyze the provided JavaScript code and ensure JSDoc comments are present and accurate for functions, classes, and complex logic blocks. Do not comment self-explanatory code or one-liners.
 
 **Instructions:**
 1.  **Add missing JSDocs:** If a function, class, or significant logic block lacks documentation, add a complete JSDoc comment.
@@ -76380,22 +76379,17 @@ JavaScript code:
 ${fileContent}
 \`\`\`
 `;
-		const response = await ai.models.generateContent({
-			model: "gemini-2.5-flash-preview-04-17",
-			contents: prompt
-		});
-		const updatedContent = response.text;
-		if (!updatedContent || !updatedContent.includes("function") && !updatedContent.includes("class") && !updatedContent.includes("const") && !updatedContent.includes("let")) {
-			console.warn("AI response did not seem like valid code. Returning original content.");
-			return fileContent;
-		}
-		const cleanedContent = updatedContent.replace(/^```javascript\n/, "").replace(/\n```$/, "");
-		return cleanedContent;
-	} catch (error$1) {
-		console.error("Error during AI JSDoc update:", error$1);
-		console.error("Returning original file content due to error.");
+	const response = await ai.models.generateContent({
+		model: "gemini-2.0-flash",
+		contents: prompt
+	});
+	const updatedContent = response.text;
+	if (!updatedContent || !updatedContent.includes("function") && !updatedContent.includes("class") && !updatedContent.includes("const") && !updatedContent.includes("let")) {
+		console.warn("AI response did not seem like valid code. Returning original content.");
 		return fileContent;
 	}
+	const cleanedContent = updatedContent.replace(/^```javascript\n/, "").replace(/\n```$/, "");
+	return cleanedContent;
 }
 
 //#endregion
