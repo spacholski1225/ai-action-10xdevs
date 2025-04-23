@@ -16,8 +16,38 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Run action
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Get PR diff
+      id: diff
+      shell: bash
+      run: |
+        # Get the PR number from the GITHUB_REF
+        if [[ $GITHUB_EVENT_NAME == 'pull_request' || $GITHUB_EVENT_NAME == 'pull_request_target' ]]; then
+          PR_NUMBER=$(echo $GITHUB_REF | sed 's/refs\/pull\///' | sed 's/\/merge//')
+          echo "PR number: $PR_NUMBER"
+
+          # Get the PR diff
+          PR_DIFF=$(gh pr diff $PR_NUMBER --repo $GITHUB_REPOSITORY)
+          echo "PR_DIFF<<EOF" >> $GITHUB_ENV
+          echo "$PR_DIFF" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+        else
+          echo "Not a pull request event, fetching diff between HEAD^1 and HEAD"
+          PR_DIFF=$(git diff HEAD^1 HEAD)
+          echo "PR_DIFF<<EOF" >> $GITHUB_ENV
+          echo "$PR_DIFF" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+        fi
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+
+    - name: Run action with PR diff
       run: node ${GITHUB_ACTION_PATH}/dist/use-ai.js
       shell: bash
       env:
         GOOGLE_API_KEY: ${{ inputs.GOOGLE_API_KEY }}
+        PR_DIFF: ${{ env.PR_DIFF }}
