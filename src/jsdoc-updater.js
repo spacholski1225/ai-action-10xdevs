@@ -46,7 +46,7 @@ ${fileContent}
 `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.5-flash-preview-04-17",
       contents: prompt,
     });
     const updatedContent = response.text;
