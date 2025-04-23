@@ -16,7 +16,8 @@ async function main() {
     model: "gemini-2.0-flash",
     contents: `
       You are a senior software engineer reviewing a pull request.
-      Provide short example of a feedback to Pull Request - imagine that you are a reviewer.
+      Conduct a thorough review of the PR based on provided diff.
+
       The PR diff is:
 
       <diff>
