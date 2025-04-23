@@ -1,6 +1,11 @@
 import * as core from "@actions/core";
 import * as fs from "fs";
-import {getPRDiff, extractPRNumber, getRepoInfo} from "./github-utils.js";
+import {
+  getPRDiff,
+  extractPRNumber,
+  getRepoInfo,
+  commentOnPR,
+} from "./github-utils.js";
 import {performAICodeReview} from "./code-review.js";
 
 /**
@@ -26,7 +31,6 @@ async function run() {
 
     // Set PR_NUMBER in the environment for the comment step
     if (prNumber) {
-      core.exportVariable("PR_NUMBER", prNumber.toString());
       console.log(`PR number: ${prNumber}`);
     }
 
@@ -41,8 +45,20 @@ async function run() {
     // Perform AI review
     const reviewText = await performAICodeReview(diff, googleApiKey);
 
-    // Write review to file for the comment step
-    fs.writeFileSync("ai_review.txt", reviewText);
+    // Comment on the PR with the review
+    if (prNumber) {
+      await commentOnPR({
+        token: githubToken,
+        owner,
+        repo,
+        prNumber,
+        body: `## AI Review Feedback:\n\n${reviewText}`,
+      });
+    } else {
+      // Log the review if not a PR
+      console.log("AI Review Feedback:");
+      console.log(reviewText);
+    }
 
     console.log("AI review completed successfully");
   } catch (error) {

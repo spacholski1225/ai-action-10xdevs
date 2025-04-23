@@ -24,7 +24,6 @@ var __toESM$1 = (mod, isNodeMode, target) => (target = mod != null ? __create$1(
 }) : target, mod));
 
 //#endregion
-const fs = __toESM$1(require("fs"));
 
 //#region node_modules/@actions/core/lib/utils.js
 var require_utils$4 = __commonJS({ "node_modules/@actions/core/lib/utils.js"(exports) {
@@ -20075,6 +20074,36 @@ function getRepoInfo() {
 		owner,
 		repo
 	};
+}
+/**
+* Comment on a pull request
+* @param {Object} options Options for commenting on the PR
+* @param {string} options.token GitHub token
+* @param {string} options.owner Repository owner
+* @param {string} options.repo Repository name
+* @param {number} options.prNumber Pull request number
+* @param {string} options.body Comment body text
+* @returns {Promise<void>}
+*/
+async function commentOnPR({ token, owner, repo, prNumber, body }) {
+	if (!prNumber) {
+		console.log("Not a PR, skipping comment");
+		return;
+	}
+	const octokit = (0, import_github.getOctokit)(token);
+	try {
+		console.log(`Commenting on PR #${prNumber}`);
+		await octokit.rest.issues.createComment({
+			owner,
+			repo,
+			issue_number: prNumber,
+			body
+		});
+		console.log("Successfully posted comment on PR");
+	} catch (error$1) {
+		import_core.error(`Error commenting on PR: ${error$1.message}`);
+		throw error$1;
+	}
 }
 
 //#endregion
@@ -79403,10 +79432,7 @@ async function run() {
 		if (!googleApiKey) throw new Error("GOOGLE_API_KEY is required");
 		const prNumber = extractPRNumber();
 		const { owner, repo } = getRepoInfo();
-		if (prNumber) {
-			import_core.exportVariable("PR_NUMBER", prNumber.toString());
-			console.log(`PR number: ${prNumber}`);
-		}
+		if (prNumber) console.log(`PR number: ${prNumber}`);
 		const { diff } = await getPRDiff({
 			token: githubToken,
 			owner,
@@ -79414,7 +79440,17 @@ async function run() {
 			prNumber
 		});
 		const reviewText = await performAICodeReview(diff, googleApiKey);
-		fs.writeFileSync("ai_review.txt", reviewText);
+		if (prNumber) await commentOnPR({
+			token: githubToken,
+			owner,
+			repo,
+			prNumber,
+			body: `## AI Review Feedback:\n\n${reviewText}`
+		});
+		else {
+			console.log("AI Review Feedback:");
+			console.log(reviewText);
+		}
 		console.log("AI review completed successfully");
 	} catch (error$1) {
 		import_core.setFailed(`Action failed with error: ${error$1.message}`);

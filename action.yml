@@ -16,21 +16,10 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Get PR diff and run AI review
+    - name: Get PR diff, run AI review, and comment
       id: ai-review
       shell: bash
       run: node ${GITHUB_ACTION_PATH}/dist/index.cjs
       env:
         GOOGLE_API_KEY: ${{ inputs.GOOGLE_API_KEY }}
-        GITHUB_TOKEN: ${{ github.token }}
-
-    - name: Comment on PR
-      if: github.event_name == 'pull_request'
-      shell: bash
-      run: |
-        REVIEW_CONTENT=$(cat ${GITHUB_ACTION_PATH}/dist/ai_review.txt)
-        gh pr comment ${{ env.PR_NUMBER }} --repo $GITHUB_REPOSITORY --body "## AI Review Feedback:
-
-        $REVIEW_CONTENT"
-      env:
         GITHUB_TOKEN: ${{ github.token }}

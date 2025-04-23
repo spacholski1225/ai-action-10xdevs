@@ -90,3 +90,36 @@ export function getRepoInfo() {
 
   return {owner, repo};
 }
+
+/**
+ * Comment on a pull request
+ * @param {Object} options Options for commenting on the PR
+ * @param {string} options.token GitHub token
+ * @param {string} options.owner Repository owner
+ * @param {string} options.repo Repository name
+ * @param {number} options.prNumber Pull request number
+ * @param {string} options.body Comment body text
+ * @returns {Promise<void>}
+ */
+export async function commentOnPR({token, owner, repo, prNumber, body}) {
+  if (!prNumber) {
+    console.log("Not a PR, skipping comment");
+    return;
+  }
+
+  const octokit = getOctokit(token);
+
+  try {
+    console.log(`Commenting on PR #${prNumber}`);
+    await octokit.rest.issues.createComment({
+      owner,
+      repo,
+      issue_number: prNumber,
+      body,
+    });
+    console.log("Successfully posted comment on PR");
+  } catch (error) {
+    core.error(`Error commenting on PR: ${error.message}`);
+    throw error;
+  }
+}
