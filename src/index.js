@@ -38,9 +38,6 @@ async function run() {
       prNumber,
     });
 
-    // Export PR_DIFF for backward compatibility
-    core.exportVariable("PR_DIFF", diff);
-
     // Perform AI review
     const reviewText = await performAICodeReview(diff, googleApiKey);
 

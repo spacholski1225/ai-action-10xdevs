@@ -50,34 +50,3 @@ export async function performAICodeReview(prDiff, apiKey) {
     throw error;
   }
 }
-
-// Keep the CLI functionality for backward compatibility
-async function main() {
-  const prDiff = process.env.PR_DIFF;
-
-  if (!prDiff) {
-    throw new Error("PR_DIFF is not set");
-  }
-
-  const apiKey = process.env.GOOGLE_API_KEY;
-
-  if (!apiKey) {
-    throw new Error("GOOGLE_API_KEY is not set");
-  }
-
-  try {
-    const reviewText = await performAICodeReview(prDiff, apiKey);
-    console.log(reviewText);
-  } catch (error) {
-    console.error("Error during AI review:", error);
-    process.exit(1);
-  }
-}
-
-// Run the main function if this file is executed directly
-if (process.argv[1] === new URL(import.meta.url).pathname) {
-  main().catch((error) => {
-    console.error("Error during AI review:", error);
-    process.exit(1);
-  });
-}
