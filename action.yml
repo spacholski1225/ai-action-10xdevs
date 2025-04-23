@@ -2,63 +2,35 @@
 name: AI Reviewer
 description: Comment from AI
 
-# GitHub Marketplace - Branding (Opcjonalne)
+# GitHub Marketplace - Branding
 branding:
   icon: "terminal"
   color: "black"
 
-# Parametry wejściowe
+# Input parameters
 inputs:
   GOOGLE_API_KEY:
     description: "Google AI Studio API Key"
 
-# Kroki danej akcji
+# Action steps
 runs:
   using: "composite"
   steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-
-    - name: Get PR diff
-      id: diff
+    - name: Get PR diff and run AI review
+      id: ai-review
       shell: bash
       run: |
-        # Get the PR number from the GITHUB_REF
-        if [[ $GITHUB_EVENT_NAME == 'pull_request' || $GITHUB_EVENT_NAME == 'pull_request_target' ]]; then
-          PR_NUMBER=$(echo $GITHUB_REF | sed 's/refs\/pull\///' | sed 's/\/merge//')
-          echo "PR number: $PR_NUMBER"
-          echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_ENV
-
-          # Get the PR diff
-          PR_DIFF=$(gh pr diff $PR_NUMBER --repo $GITHUB_REPOSITORY)
-          echo "PR_DIFF<<EOF" >> $GITHUB_ENV
-          echo "$PR_DIFF" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-        else
-          echo "Not a pull request event, fetching diff between HEAD^1 and HEAD"
-          PR_DIFF=$(git diff HEAD^1 HEAD)
-          echo "PR_DIFF<<EOF" >> $GITHUB_ENV
-          echo "$PR_DIFF" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-        fi
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
-
-    - name: Run action with PR diff
-      id: ai-review
-      run: node ${GITHUB_ACTION_PATH}/dist/use-ai.js > ai_review.txt
-      shell: bash
+        cd ${GITHUB_ACTION_PATH}
+        node dist/index.js
       env:
         GOOGLE_API_KEY: ${{ inputs.GOOGLE_API_KEY }}
-        PR_DIFF: ${{ env.PR_DIFF }}
+        GITHUB_TOKEN: ${{ github.token }}
 
     - name: Comment on PR
       if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
       shell: bash
       run: |
-        REVIEW_CONTENT=$(cat ai_review.txt)
+        REVIEW_CONTENT=$(cat ${GITHUB_ACTION_PATH}/ai_review.txt)
         gh pr comment ${{ env.PR_NUMBER }} --repo $GITHUB_REPOSITORY --body "## AI Review Feedback:
 
         $REVIEW_CONTENT"

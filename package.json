@@ -1,32 +1,26 @@
 {
   "name": "10x-ai-action",
-  "version": "0.0.1",
-  "description": "Example GHA Composite Action",
-  "main": "dist/use-ai.js",
+  "version": "1.0.0",
+  "description": "AI-powered PR reviewer that uses GitHub SDK and Google Gemini",
+  "type": "module",
+  "main": "dist/index.js",
   "scripts": {
-    "build": "npx rolldown src/use-ai.js --file dist/use-ai.js"
+    "build": "npx rolldown src/index.js --file dist/index.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/przeprogramowani/ai-action.git"
   },
   "keywords": [
-    "ai",
-    "generative-ai",
-    "gemini",
     "github",
-    "actions"
+    "action",
+    "ai",
+    "pr-review"
   ],
-  "author": "przeprogramowani",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/przeprogramowani/ai-action/issues"
-  },
-  "homepage": "https://github.com/przeprogramowani/ai-action#readme",
-  "devDependencies": {
-    "dotenv": "16.5.0"
-  },
   "dependencies": {
-    "@google/genai": "0.9.0"
+    "@actions/core": "^1.10.1",
+    "@actions/github": "^6.0.0",
+    "@google/genai": "^0.2.1",
+    "dotenv": "^16.3.1"
   }
 }
