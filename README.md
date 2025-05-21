@@ -19,11 +19,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - uses: przeprogramowani/ai-action@master
+      - uses: spacholski1225/ai-action-10xdevs@master
         with:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
 ```
 
 ## Inputs
 
-- `GOOGLE_API_KEY`: The API key for Google AI Studio.
+- `ANTHROPIC_API_KEYU`: The API key for Anthropic.

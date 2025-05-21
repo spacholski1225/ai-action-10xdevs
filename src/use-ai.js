@@ -1,17 +1,20 @@
-import {GoogleGenAI} from "@google/genai";
+import Anthropic from "@anthropic-ai/sdk";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const ai = new GoogleGenAI({apiKey: process.env.GOOGLE_API_KEY});
+const ai = new Anthropic({apiKey: process.env.ANTHROPIC_API_KEY});
 
 async function main() {
-  const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
-    contents:
-      "Provide short example of a feedback to Pull Request - imagine that you are a reviewer.",
+  const response = await ai.messages.create({
+    model: "claude-3-5-haiku-20241022",
+    max_tokens: 1000,
+    messages: [{
+      role: "user",
+      content: "Provide short example of a feedback to Pull Request - imagine that you are a reviewer."
+    }]
   });
-  console.log(response.text);
+  console.log(response.content[0].text);
 }
 
 main();

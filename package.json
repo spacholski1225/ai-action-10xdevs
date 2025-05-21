@@ -27,6 +27,6 @@
     "dotenv": "16.5.0"
   },
   "dependencies": {
-    "@google/genai": "0.9.0"
+    "@anthropic-ai/sdk": "^0.51.0"
   }
 }

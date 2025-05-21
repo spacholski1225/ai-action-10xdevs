@@ -9,8 +9,8 @@ branding:
 
 # Parametry wejściowe
 inputs:
-  GOOGLE_API_KEY:
-    description: "Google AI Studio API Key"
+  ANTHROPIC_API_KEY:
+    description: "Anthropic API Key"
 
 # Kroki danej akcji
 runs:
@@ -20,4 +20,4 @@ runs:
       run: node ${GITHUB_ACTION_PATH}/dist/use-ai.js
       shell: bash
       env:
-        GOOGLE_API_KEY: ${{ inputs.GOOGLE_API_KEY }}
+        ANTHROPIC_API_KEY: ${{ inputs.ANTHROPIC_API_KEY }}
