@@ -15,14 +15,14 @@ async function run() {
   try {
     // Get inputs and context
     const githubToken = process.env.GITHUB_TOKEN;
-    const googleApiKey = process.env.GOOGLE_API_KEY;
+    const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
 
     if (!githubToken) {
       throw new Error("GITHUB_TOKEN is required");
     }
 
-    if (!googleApiKey) {
-      throw new Error("GOOGLE_API_KEY is required");
+    if (!anthropicApiKey) {
+      throw new Error("ANTHROPIC_API_KEY is required");
     }
 
     // Get PR details
@@ -43,7 +43,7 @@ async function run() {
     });
 
     // Perform AI review
-    const reviewText = await performAICodeReview(diff, googleApiKey);
+    const reviewText = await performAICodeReview(diff, anthropicApiKey);
 
     // Comment on the PR with the review
     if (prNumber) {

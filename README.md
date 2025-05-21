@@ -1,12 +1,12 @@
 # 10x AI Action
 
-A GitHub Action that provides AI-powered code review for pull requests using Google's Gemini AI.
+A GitHub Action that provides AI-powered code review for pull requests using Anthropic AI.
 
 ## Features
 
 - Uses GitHub Actions SDK instead of shell scripts for better reliability
 - Gets PR diffs using the GitHub API
-- Analyzes code changes with Google's Gemini AI
+- Analyzes code changes with Anthropic AI
 - Posts review comments on pull requests
 - Works with both PR events and direct commits
 
@@ -25,9 +25,9 @@ jobs:
   review:
     runs-on: ubuntu-latest
     steps:
-      - uses: przeprogramowani/ai-action@master
+      - uses: spacholski1225/ai-action-10xdevs@git-diff
         with:
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 ```
 
 ## How It Works
@@ -35,7 +35,7 @@ jobs:
 This action uses a modular approach:
 
 1. **GitHub API Integration**: Uses the GitHub SDK (`@actions/github`) to fetch PR diffs programmatically
-2. **AI Analysis**: Processes the diff through Google's Gemini AI model for code review
+2. **AI Analysis**: Processes the diff through Anthropic AI model for code review
 3. **Comment Generation**: Posts the AI feedback as a comment on the PR
 
 ## Development

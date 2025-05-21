@@ -1,12 +1,12 @@
-import {GoogleGenAI} from "@google/genai";
+import Anthropic from "@anthropic-ai/sdk";
 import dotenv from "dotenv";
 
 dotenv.config();
 
 /**
- * Performs an AI code review on a PR diff using Google's Gemini model
+ * Performs an AI code review on a PR diff using Anthropic's Claude model
  * @param {string} prDiff The PR diff to review
- * @param {string} apiKey Google AI API key
+ * @param {string} apiKey Anthropic API key
  * @returns {Promise<string>} The AI review feedback
  */
 export async function performAICodeReview(prDiff, apiKey) {
@@ -15,16 +15,20 @@ export async function performAICodeReview(prDiff, apiKey) {
   }
 
   if (!apiKey) {
-    throw new Error("Google API key is required");
+    throw new Error("Anthropic API key is required");
   }
 
-  const ai = new GoogleGenAI({apiKey});
+  const anthropic = new Anthropic({
+    apiKey: apiKey,
+  });
 
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
-      contents: `
-        You are a senior software engineer reviewing a pull request.
+    const response = await anthropic.messages.create({
+      model: "claude-3-5-haiku-20241022",
+      max_tokens: 1000,
+      messages: [{
+        role: "user",
+        content: `You are a senior software engineer reviewing a pull request.
         Conduct a thorough review of the PR based on provided diff.
 
         The PR diff is:
@@ -40,11 +44,11 @@ export async function performAICodeReview(prDiff, apiKey) {
         - Code duplication - is the code duplicated?
         - Code quality - is the code of high quality?
 
-        You are allowed to use "N/A" for cases where the PR does not bring any changes in given area.
-        `,
+        You are allowed to use "N/A" for cases where the PR does not bring any changes in given area.`
+      }]
     });
 
-    return response.text;
+    return response.content[0].text;
   } catch (error) {
     console.error("Error during AI review:", error);
     throw error;
