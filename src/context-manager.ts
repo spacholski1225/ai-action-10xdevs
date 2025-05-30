@@ -1,13 +1,16 @@
+import { OptimizeContextOptions, OptimizeContextResult } from './types/context.js';
+import { FileContentOptions } from './types/github.js';
+
 /**
  * Extract modified files from a PR diff
- * @param {string} diff The PR diff content
- * @returns {string[]} Array of modified file paths
+ * @param diff The PR diff content
+ * @returns Array of modified file paths
  */
-export function extractModifiedFiles(diff) {
+export function extractModifiedFiles(diff: string): string[] {
   const filePathRegex = /^diff --git a\/(.*?) b\/(.*?)$/gm;
-  const modifiedFiles = new Set();
+  const modifiedFiles = new Set<string>();
   
-  let match;
+  let match: RegExpExecArray | null;
   while ((match = filePathRegex.exec(diff)) !== null) {
     modifiedFiles.add(match[1]);
   }
@@ -17,14 +20,8 @@ export function extractModifiedFiles(diff) {
 
 /**
  * Get file content from GitHub repository
- * @param {Object} params Parameters object
- * @param {Object} params.octokit Octokit instance
- * @param {string} params.owner Repository owner
- * @param {string} params.repo Repository name
- * @param {string} params.path File path
- * @param {string} params.ref Git reference (default: 'HEAD')
- * @param {number} params.maxLines Maximum lines to include (default: 500)
- * @returns {Promise<string>} File content
+ * @param params Parameters object
+ * @returns File content
  */
 export async function getFileContent({
   octokit,
@@ -33,7 +30,7 @@ export async function getFileContent({
   path,
   ref = 'HEAD',
   maxLines = 500
-}) {
+}: FileContentOptions): Promise<string> {
   try {
     const response = await octokit.rest.repos.getContent({
       owner,
@@ -43,7 +40,7 @@ export async function getFileContent({
     });
     
     // GitHub API returns content as base64
-    const content = Buffer.from(response.data.content, 'base64').toString();
+    const content = Buffer.from((response.data as any).content, 'base64').toString();
     
     // Limit to maxLines if needed
     const lines = content.split('\n');
@@ -53,7 +50,7 @@ export async function getFileContent({
     }
     
     return content;
-  } catch (error) {
+  } catch (error: any) {
     console.warn(`Cannot retrieve file content for ${path}: ${error.message}`);
     return `// Cannot retrieve file content: ${error.message}`;
   }
@@ -61,28 +58,24 @@ export async function getFileContent({
 
 /**
  * Estimate token count (Claude uses ~4 characters per token)
- * @param {string} text Text to estimate tokens for
- * @returns {number} Estimated token count
+ * @param text Text to estimate tokens for
+ * @returns Estimated token count
  */
-function estimateTokenCount(text) {
+function estimateTokenCount(text: string): number {
   return Math.ceil(text.length / 4);
 }
 
 /**
  * Manage context to stay within token limits
- * @param {Object} params Parameters object
- * @param {string} params.diff PR diff content
- * @param {Object} params.fileContents Map of file paths to their content
- * @param {number} params.modelMaxTokens Maximum tokens for the model (default: 200000)
- * @param {number} params.safetyFactor Safety factor to stay below limits (default: 0.9)
- * @returns {Object} Optimized context with diff and file contents
+ * @param params Parameters object
+ * @returns Optimized context with diff and file contents
  */
 export function optimizeContext({
   diff,
   fileContents,
   modelMaxTokens = 200000,
   safetyFactor = 0.9
-}) {
+}: OptimizeContextOptions): OptimizeContextResult {
   const tokenLimit = modelMaxTokens * safetyFactor;
   
   // Always include diff
@@ -110,7 +103,7 @@ export function optimizeContext({
   );
   
   // Include as many files as possible
-  const optimizedFileContents = {};
+  const optimizedFileContents: Record<string, string> = {};
   for (const [path, content] of sortedFiles) {
     const contentTokens = estimateTokenCount(content);
     

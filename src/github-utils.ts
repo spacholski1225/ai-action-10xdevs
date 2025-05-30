@@ -1,18 +1,15 @@
-import {getOctokit} from "@actions/github";
+import { getOctokit } from "@actions/github";
 import * as core from "@actions/core";
+import { PRDiffOptions, PRDiffResult, RepoInfo, PRCommentOptions } from './types/github.js';
 
 /**
  * Get a PR diff using the GitHub API
- * @param {Object} options Options for getting the diff
- * @param {string} options.token GitHub token
- * @param {string} options.owner Repository owner
- * @param {string} options.repo Repository name
- * @param {number|null} options.prNumber Pull request number (if applicable)
- * @returns {Promise<{diff: string, prNumber: number|null}>} The PR diff and PR number
+ * @param options Options for getting the diff
+ * @returns The PR diff and PR number
  */
-export async function getPRDiff({token, owner, repo, prNumber = null}) {
+export async function getPRDiff({token, owner, repo, prNumber = null}: PRDiffOptions): Promise<PRDiffResult> {
   const octokit = getOctokit(token);
-  let diff;
+  let diff: string;
 
   try {
     // Handle PR events
@@ -29,7 +26,7 @@ export async function getPRDiff({token, owner, repo, prNumber = null}) {
         },
       });
 
-      diff = response.data;
+      diff = response.data as unknown as string;
     } else {
       // For non-PR events, get the diff between HEAD^1 and HEAD
       console.log(
@@ -46,15 +43,15 @@ export async function getPRDiff({token, owner, repo, prNumber = null}) {
 
       // Format the files comparison into a diff-like format
       diff = response.data.files
-        .map((file) => {
+        ?.map((file) => {
           return `diff --git a/${file.filename} b/${file.filename}
 ${file.patch || ""}`;
         })
-        .join("\n");
+        .join("\n") || "";
     }
 
     return {diff, prNumber};
-  } catch (error) {
+  } catch (error: any) {
     core.error(`Error getting PR diff: ${error.message}`);
     throw error;
   }
@@ -62,9 +59,9 @@ ${file.patch || ""}`;
 
 /**
  * Extract the PR number from the GitHub context
- * @returns {number|null} The PR number or null if not a PR
+ * @returns The PR number or null if not a PR
  */
-export function extractPRNumber() {
+export function extractPRNumber(): number | null {
   // Check if this is a PR event
   const githubRef = process.env.GITHUB_REF || "";
   const isPR =
@@ -82,9 +79,9 @@ export function extractPRNumber() {
 
 /**
  * Get the repository owner and name from the GitHub context
- * @returns {Object} Object containing owner and repo
+ * @returns Object containing owner and repo
  */
-export function getRepoInfo() {
+export function getRepoInfo(): RepoInfo {
   const repository = process.env.GITHUB_REPOSITORY || "";
   const [owner, repo] = repository.split("/");
 
@@ -93,15 +90,9 @@ export function getRepoInfo() {
 
 /**
  * Comment on a pull request
- * @param {Object} options Options for commenting on the PR
- * @param {string} options.token GitHub token
- * @param {string} options.owner Repository owner
- * @param {string} options.repo Repository name
- * @param {number} options.prNumber Pull request number
- * @param {string} options.body Comment body text
- * @returns {Promise<void>}
+ * @param options Options for commenting on the PR
  */
-export async function commentOnPR({token, owner, repo, prNumber, body}) {
+export async function commentOnPR({token, owner, repo, prNumber, body}: PRCommentOptions): Promise<void> {
   if (!prNumber) {
     console.log("Not a PR, skipping comment");
     return;
@@ -118,7 +109,7 @@ export async function commentOnPR({token, owner, repo, prNumber, body}) {
       body,
     });
     console.log("Successfully posted comment on PR");
-  } catch (error) {
+  } catch (error: any) {
     core.error(`Error commenting on PR: ${error.message}`);
     throw error;
   }

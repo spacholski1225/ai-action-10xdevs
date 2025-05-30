@@ -1,11 +1,17 @@
 import {defineConfig} from "rolldown";
 
 export default defineConfig({
-  input: "src/index.js",
+  input: "dist/index.js",
   output: {
     file: "dist/index.cjs",
     format: "cjs",
   },
-  external: [],
+  external: [
+    // Only keep Node.js built-in modules as external
+    'fs',
+    'path',
+    'crypto',
+    'util'
+  ],
   platform: "node",
 });

@@ -5,7 +5,10 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "build": "npx rolldown -c rolldown.config.js"
+    "build": "tsc && npm run bundle",
+    "bundle": "npx rolldown -c rolldown.config.js",
+    "lint": "eslint src/**/*.ts",
+    "typecheck": "tsc --noEmit"
   },
   "repository": {
     "type": "git",
@@ -25,6 +28,8 @@
     "dotenv": "^16.3.1"
   },
   "devDependencies": {
-    "rolldown": "1.0.0-beta.8"
+    "@types/node": "^22.15.27",
+    "rolldown": "1.0.0-beta.8",
+    "typescript": "^5.8.3"
   }
 }

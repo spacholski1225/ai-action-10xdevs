@@ -1,42 +1,32 @@
 import Anthropic from "@anthropic-ai/sdk";
 import dotenv from "dotenv";
-
 dotenv.config();
-
 /**
  * Performs an AI code review on a PR diff using Anthropic's Claude model
- * @param {string} prDiff The PR diff to review
- * @param {Object} fileContents Map of file paths to their full content
- * @param {string} apiKey Anthropic API key
- * @param {Object} options Additional options
- * @returns {Promise<string>} The AI review feedback
+ * @param prDiff The PR diff to review
+ * @param fileContents Map of file paths to their full content
+ * @param apiKey Anthropic API key
+ * @param options Additional options
+ * @returns The AI review feedback
  */
-export async function performAICodeReview(prDiff, fileContents = {}, apiKey, options = {}) {
-  if (!prDiff) {
-    throw new Error("PR diff is empty or not provided");
-  }
-
-  if (!apiKey) {
-    throw new Error("Anthropic API key is required");
-  }
-
-  const {
-    model,
-    maxTokens = 5000
-  } = options;
-
-  if (!model) {
-    throw new Error("Model must be provided in options");
-  }
-
-  const anthropic = new Anthropic({
-    apiKey: apiKey,
-  });
-
-  // Create file context section if available
-  let fileContextSection = "";
-  if (Object.keys(fileContents).length > 0) {
-    fileContextSection = `
+export async function performAICodeReview(prDiff, fileContents = {}, apiKey, options) {
+    if (!prDiff) {
+        throw new Error("PR diff is empty or not provided");
+    }
+    if (!apiKey) {
+        throw new Error("Anthropic API key is required");
+    }
+    const { model, maxTokens = 5000 } = options;
+    if (!model) {
+        throw new Error("Model must be provided in options");
+    }
+    const anthropic = new Anthropic({
+        apiKey: apiKey,
+    });
+    // Create file context section if available
+    let fileContextSection = "";
+    if (Object.keys(fileContents).length > 0) {
+        fileContextSection = `
     <existing_files>
     ${Object.entries(fileContents).map(([path, content]) => `
       <file path="${path}">
@@ -45,15 +35,14 @@ export async function performAICodeReview(prDiff, fileContents = {}, apiKey, opt
     `).join("\n")}
     </existing_files>
     `;
-  }
-
-  try {
-    const requestPayload = {
-      model: model,
-      max_tokens: maxTokens,
-      messages: [{
-        role: "user",
-        content: `You are a senior software engineer tasked with reviewing a pull request. Your goal is to conduct a thorough review based on the provided file context and pull request diff, focusing on specific areas and adhering to given code standards.
+    }
+    try {
+        const requestPayload = {
+            model: model,
+            max_tokens: maxTokens,
+            messages: [{
+                    role: "user",
+                    content: `You are a senior software engineer tasked with reviewing a pull request. Your goal is to conduct a thorough review based on the provided file context and pull request diff, focusing on specific areas and adhering to given code standards.
 
 First, review the context of the existing files:
 
@@ -128,34 +117,39 @@ Here's an example of how your final review should be structured in markdown:
 \`\`\`
 
 Please proceed with your analysis and review of the pull request.`
-      }]
-    };
-
-    console.log("=== ANTHROPIC API REQUEST ===");
-    console.log("Model:", requestPayload.model);
-    console.log("Max tokens:", requestPayload.max_tokens);
-    console.log("Message role:", requestPayload.messages[0].role);
-    console.log("Message content length:", requestPayload.messages[0].content.length);
-    console.log("Full request payload:", JSON.stringify(requestPayload, null, 2));
-    console.log("=== END REQUEST ===");
-
-    const response = await anthropic.messages.create(requestPayload);
-
-    console.log("=== ANTHROPIC API RESPONSE ===");
-    console.log("Response ID:", response.id);
-    console.log("Response model:", response.model);
-    console.log("Response type:", response.type);
-    console.log("Response role:", response.role);
-    console.log("Usage:", JSON.stringify(response.usage, null, 2));
-    console.log("Content length:", response.content[0].text.length);
-    console.log("Full response:", JSON.stringify(response, null, 2));
-    console.log("=== END RESPONSE ===");
-
-    // Filter out the code_review_analysis section before returning
-    const filteredResponse = response.content[0].text.replace(/<code_review_analysis>[\s\S]*?<\/code_review_analysis>/g, '');
-    return filteredResponse;
-  } catch (error) {
-    console.error("Error during AI review:", error);
-    throw error;
-  }
+                }]
+        };
+        console.log("=== ANTHROPIC API REQUEST ===");
+        console.log("Model:", requestPayload.model);
+        console.log("Max tokens:", requestPayload.max_tokens);
+        console.log("Message role:", requestPayload.messages[0].role);
+        console.log("Message content length:", requestPayload.messages[0].content.length);
+        console.log("Full request payload:", JSON.stringify(requestPayload, null, 2));
+        console.log("=== END REQUEST ===");
+        const response = await anthropic.messages.create(requestPayload);
+        console.log("=== ANTHROPIC API RESPONSE ===");
+        console.log("Response ID:", response.id);
+        console.log("Response model:", response.model);
+        console.log("Response type:", response.type);
+        console.log("Response role:", response.role);
+        console.log("Usage:", JSON.stringify(response.usage, null, 2));
+        const textContent = response.content[0];
+        if (textContent.type === 'text') {
+            console.log("Content length:", textContent.text.length);
+        }
+        console.log("Full response:", JSON.stringify(response, null, 2));
+        console.log("=== END RESPONSE ===");
+        // Filter out the code_review_analysis section before returning
+        const firstContent = response.content[0];
+        if (firstContent.type === 'text') {
+            const filteredResponse = firstContent.text.replace(/<code_review_analysis>[\s\S]*?<\/code_review_analysis>/g, '');
+            return filteredResponse;
+        }
+        throw new Error("Unexpected response content type from Anthropic API");
+    }
+    catch (error) {
+        console.error("Error during AI review:", error);
+        throw error;
+    }
 }
+//# sourceMappingURL=code-review.js.map

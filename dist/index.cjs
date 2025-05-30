@@ -187,14 +187,14 @@ var require_file_command = __commonJS({ "node_modules/@actions/core/lib/file-com
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.prepareKeyValueMessage = exports.issueFileCommand = void 0;
 	const crypto$4 = __importStar$11(require("crypto"));
-	const fs$3 = __importStar$11(require("fs"));
+	const fs$2 = __importStar$11(require("fs"));
 	const os$3 = __importStar$11(require("os"));
 	const utils_1$3 = require_utils$3();
 	function issueFileCommand(command, message) {
 		const filePath = process.env[`GITHUB_${command}`];
 		if (!filePath) throw new Error(`Unable to find environment variable for file command ${command}`);
-		if (!fs$3.existsSync(filePath)) throw new Error(`Missing file at path: ${filePath}`);
-		fs$3.appendFileSync(filePath, `${(0, utils_1$3.toCommandValue)(message)}${os$3.EOL}`, { encoding: "utf8" });
+		if (!fs$2.existsSync(filePath)) throw new Error(`Missing file at path: ${filePath}`);
+		fs$2.appendFileSync(filePath, `${(0, utils_1$3.toCommandValue)(message)}${os$3.EOL}`, { encoding: "utf8" });
 	}
 	exports.issueFileCommand = issueFileCommand;
 	function prepareKeyValueMessage(key, value) {
@@ -15704,12 +15704,12 @@ var require_io_util = __commonJS({ "node_modules/@actions/io/lib/io-util.js"(exp
 	var _a$1;
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.getCmdPath = exports.tryGetExecutablePath = exports.isRooted = exports.isDirectory = exports.exists = exports.READONLY = exports.UV_FS_O_EXLOCK = exports.IS_WINDOWS = exports.unlink = exports.symlink = exports.stat = exports.rmdir = exports.rm = exports.rename = exports.readlink = exports.readdir = exports.open = exports.mkdir = exports.lstat = exports.copyFile = exports.chmod = void 0;
-	const fs$2 = __importStar$8(require("fs"));
+	const fs$1 = __importStar$8(require("fs"));
 	const path$5 = __importStar$8(require("path"));
-	_a$1 = fs$2.promises, exports.chmod = _a$1.chmod, exports.copyFile = _a$1.copyFile, exports.lstat = _a$1.lstat, exports.mkdir = _a$1.mkdir, exports.open = _a$1.open, exports.readdir = _a$1.readdir, exports.readlink = _a$1.readlink, exports.rename = _a$1.rename, exports.rm = _a$1.rm, exports.rmdir = _a$1.rmdir, exports.stat = _a$1.stat, exports.symlink = _a$1.symlink, exports.unlink = _a$1.unlink;
+	_a$1 = fs$1.promises, exports.chmod = _a$1.chmod, exports.copyFile = _a$1.copyFile, exports.lstat = _a$1.lstat, exports.mkdir = _a$1.mkdir, exports.open = _a$1.open, exports.readdir = _a$1.readdir, exports.readlink = _a$1.readlink, exports.rename = _a$1.rename, exports.rm = _a$1.rm, exports.rmdir = _a$1.rmdir, exports.stat = _a$1.stat, exports.symlink = _a$1.symlink, exports.unlink = _a$1.unlink;
 	exports.IS_WINDOWS = process.platform === "win32";
 	exports.UV_FS_O_EXLOCK = 268435456;
-	exports.READONLY = fs$2.constants.O_RDONLY;
+	exports.READONLY = fs$1.constants.O_RDONLY;
 	function exists(fsPath) {
 		return __awaiter$6(this, void 0, void 0, function* () {
 			try {
@@ -20005,15 +20005,11 @@ var require_github = __commonJS({ "node_modules/@actions/github/lib/github.js"(e
 var import_github = __toESM$1(require_github(), 1);
 
 //#endregion
-//#region src/github-utils.js
+//#region dist/github-utils.js
 /**
 * Get a PR diff using the GitHub API
-* @param {Object} options Options for getting the diff
-* @param {string} options.token GitHub token
-* @param {string} options.owner Repository owner
-* @param {string} options.repo Repository name
-* @param {number|null} options.prNumber Pull request number (if applicable)
-* @returns {Promise<{diff: string, prNumber: number|null}>} The PR diff and PR number
+* @param options Options for getting the diff
+* @returns The PR diff and PR number
 */
 async function getPRDiff({ token, owner, repo, prNumber = null }) {
 	const octokit = (0, import_github.getOctokit)(token);
@@ -20036,10 +20032,10 @@ async function getPRDiff({ token, owner, repo, prNumber = null }) {
 				base: "HEAD~1",
 				head: "HEAD"
 			});
-			diff = response.data.files.map((file) => {
+			diff = response.data.files?.map((file) => {
 				return `diff --git a/${file.filename} b/${file.filename}
 ${file.patch || ""}`;
-			}).join("\n");
+			}).join("\n") || "";
 		}
 		return {
 			diff,
@@ -20052,7 +20048,7 @@ ${file.patch || ""}`;
 }
 /**
 * Extract the PR number from the GitHub context
-* @returns {number|null} The PR number or null if not a PR
+* @returns The PR number or null if not a PR
 */
 function extractPRNumber() {
 	const githubRef = process.env.GITHUB_REF || "";
@@ -20065,7 +20061,7 @@ function extractPRNumber() {
 }
 /**
 * Get the repository owner and name from the GitHub context
-* @returns {Object} Object containing owner and repo
+* @returns Object containing owner and repo
 */
 function getRepoInfo() {
 	const repository = process.env.GITHUB_REPOSITORY || "";
@@ -20077,13 +20073,7 @@ function getRepoInfo() {
 }
 /**
 * Comment on a pull request
-* @param {Object} options Options for commenting on the PR
-* @param {string} options.token GitHub token
-* @param {string} options.owner Repository owner
-* @param {string} options.repo Repository name
-* @param {number} options.prNumber Pull request number
-* @param {string} options.body Comment body text
-* @returns {Promise<void>}
+* @param options Options for commenting on the PR
 */
 async function commentOnPR({ token, owner, repo, prNumber, body }) {
 	if (!prNumber) {
@@ -23461,7 +23451,7 @@ var require_package = __commonJS({ "node_modules/dotenv/package.json"(exports, m
 //#endregion
 //#region node_modules/dotenv/lib/main.js
 var require_main = __commonJS({ "node_modules/dotenv/lib/main.js"(exports, module) {
-	const fs$1 = require("fs");
+	const fs = require("fs");
 	const path = require("path");
 	const os = require("os");
 	const crypto = require("crypto");
@@ -23558,10 +23548,10 @@ var require_main = __commonJS({ "node_modules/dotenv/lib/main.js"(exports, modul
 	function _vaultPath(options) {
 		let possibleVaultPath = null;
 		if (options && options.path && options.path.length > 0) if (Array.isArray(options.path)) {
-			for (const filepath of options.path) if (fs$1.existsSync(filepath)) possibleVaultPath = filepath.endsWith(".vault") ? filepath : `${filepath}.vault`;
+			for (const filepath of options.path) if (fs.existsSync(filepath)) possibleVaultPath = filepath.endsWith(".vault") ? filepath : `${filepath}.vault`;
 		} else possibleVaultPath = options.path.endsWith(".vault") ? options.path : `${options.path}.vault`;
 		else possibleVaultPath = path.resolve(process.cwd(), ".env.vault");
-		if (fs$1.existsSync(possibleVaultPath)) return possibleVaultPath;
+		if (fs.existsSync(possibleVaultPath)) return possibleVaultPath;
 		return null;
 	}
 	function _resolveHome(envPath) {
@@ -23591,7 +23581,7 @@ var require_main = __commonJS({ "node_modules/dotenv/lib/main.js"(exports, modul
 		let lastError;
 		const parsedAll = {};
 		for (const path$7 of optionPaths) try {
-			const parsed = DotenvModule.parse(fs$1.readFileSync(path$7, { encoding }));
+			const parsed = DotenvModule.parse(fs.readFileSync(path$7, { encoding }));
 			DotenvModule.populate(parsedAll, parsed, options);
 		} catch (e) {
 			if (debug$2) _debug(`Failed to load ${path$7} ${e.message}`);
@@ -23675,17 +23665,17 @@ var require_main = __commonJS({ "node_modules/dotenv/lib/main.js"(exports, modul
 var import_main = __toESM$1(require_main(), 1);
 
 //#endregion
-//#region src/code-review.js
+//#region dist/code-review.js
 import_main.default.config();
 /**
 * Performs an AI code review on a PR diff using Anthropic's Claude model
-* @param {string} prDiff The PR diff to review
-* @param {Object} fileContents Map of file paths to their full content
-* @param {string} apiKey Anthropic API key
-* @param {Object} options Additional options
-* @returns {Promise<string>} The AI review feedback
+* @param prDiff The PR diff to review
+* @param fileContents Map of file paths to their full content
+* @param apiKey Anthropic API key
+* @param options Additional options
+* @returns The AI review feedback
 */
-async function performAICodeReview(prDiff, fileContents = {}, apiKey, options = {}) {
+async function performAICodeReview(prDiff, fileContents = {}, apiKey, options) {
 	if (!prDiff) throw new Error("PR diff is empty or not provided");
 	if (!apiKey) throw new Error("Anthropic API key is required");
 	const { model, maxTokens = 5e3 } = options;
@@ -23798,11 +23788,16 @@ Please proceed with your analysis and review of the pull request.`
 		console.log("Response type:", response.type);
 		console.log("Response role:", response.role);
 		console.log("Usage:", JSON.stringify(response.usage, null, 2));
-		console.log("Content length:", response.content[0].text.length);
+		const textContent = response.content[0];
+		if (textContent.type === "text") console.log("Content length:", textContent.text.length);
 		console.log("Full response:", JSON.stringify(response, null, 2));
 		console.log("=== END RESPONSE ===");
-		const filteredResponse = response.content[0].text.replace(/<code_review_analysis>[\s\S]*?<\/code_review_analysis>/g, "");
-		return filteredResponse;
+		const firstContent = response.content[0];
+		if (firstContent.type === "text") {
+			const filteredResponse = firstContent.text.replace(/<code_review_analysis>[\s\S]*?<\/code_review_analysis>/g, "");
+			return filteredResponse;
+		}
+		throw new Error("Unexpected response content type from Anthropic API");
 	} catch (error$1) {
 		console.error("Error during AI review:", error$1);
 		throw error$1;
@@ -23810,11 +23805,11 @@ Please proceed with your analysis and review of the pull request.`
 }
 
 //#endregion
-//#region src/context-manager.js
+//#region dist/context-manager.js
 /**
 * Extract modified files from a PR diff
-* @param {string} diff The PR diff content
-* @returns {string[]} Array of modified file paths
+* @param diff The PR diff content
+* @returns Array of modified file paths
 */
 function extractModifiedFiles(diff) {
 	const filePathRegex = /^diff --git a\/(.*?) b\/(.*?)$/gm;
@@ -23825,14 +23820,8 @@ function extractModifiedFiles(diff) {
 }
 /**
 * Get file content from GitHub repository
-* @param {Object} params Parameters object
-* @param {Object} params.octokit Octokit instance
-* @param {string} params.owner Repository owner
-* @param {string} params.repo Repository name
-* @param {string} params.path File path
-* @param {string} params.ref Git reference (default: 'HEAD')
-* @param {number} params.maxLines Maximum lines to include (default: 500)
-* @returns {Promise<string>} File content
+* @param params Parameters object
+* @returns File content
 */
 async function getFileContent({ octokit, owner, repo, path: path$7, ref = "HEAD", maxLines = 500 }) {
 	try {
@@ -23853,20 +23842,16 @@ async function getFileContent({ octokit, owner, repo, path: path$7, ref = "HEAD"
 }
 /**
 * Estimate token count (Claude uses ~4 characters per token)
-* @param {string} text Text to estimate tokens for
-* @returns {number} Estimated token count
+* @param text Text to estimate tokens for
+* @returns Estimated token count
 */
 function estimateTokenCount(text) {
 	return Math.ceil(text.length / 4);
 }
 /**
 * Manage context to stay within token limits
-* @param {Object} params Parameters object
-* @param {string} params.diff PR diff content
-* @param {Object} params.fileContents Map of file paths to their content
-* @param {number} params.modelMaxTokens Maximum tokens for the model (default: 200000)
-* @param {number} params.safetyFactor Safety factor to stay below limits (default: 0.9)
-* @returns {Object} Optimized context with diff and file contents
+* @param params Parameters object
+* @returns Optimized context with diff and file contents
 */
 function optimizeContext({ diff, fileContents, modelMaxTokens = 2e5, safetyFactor = .9 }) {
 	const tokenLimit = modelMaxTokens * safetyFactor;
@@ -23907,7 +23892,7 @@ function optimizeContext({ diff, fileContents, modelMaxTokens = 2e5, safetyFacto
 }
 
 //#endregion
-//#region src/index.js
+//#region dist/index.js
 /**
 * Main function that orchestrates the PR diff retrieval and AI review
 */

@@ -1,5 +1,4 @@
 import * as core from "@actions/core";
-import * as fs from "fs";
 import {
   getPRDiff,
   extractPRNumber,
@@ -17,7 +16,7 @@ import { getOctokit } from "@actions/github";
 /**
  * Main function that orchestrates the PR diff retrieval and AI review
  */
-async function run() {
+async function run(): Promise<void> {
   try {
     // Get inputs and context
     const githubToken = process.env.GITHUB_TOKEN;
@@ -27,7 +26,7 @@ async function run() {
     const safetyFactor = parseFloat(process.env.CONTEXT_SAFETY_FACTOR || "0.9");
     
     // Model token limits (approximate)
-    const MODEL_TOKEN_LIMITS = {
+    const MODEL_TOKEN_LIMITS: Record<string, number> = {
       "claude-3-5-haiku-20241022": 200000,
       "claude-sonnet-4-20250514": 200000,
     };
@@ -67,7 +66,7 @@ async function run() {
     const octokit = getOctokit(githubToken);
     
     // Get content of modified files
-    const fileContentsMap = {};
+    const fileContentsMap: Record<string, string> = {};
     
     for (const filePath of modifiedFiles) {
       try {
@@ -83,7 +82,7 @@ async function run() {
         
         fileContentsMap[filePath] = content;
         console.log(`Retrieved content for ${filePath} (${content.length} bytes)`);
-      } catch (error) {
+      } catch (error: any) {
         console.warn(`Error retrieving content for ${filePath}: ${error.message}`);
       }
     }
@@ -122,7 +121,7 @@ async function run() {
     }
 
     console.log("AI review completed successfully");
-  } catch (error) {
+  } catch (error: any) {
     core.setFailed(`Action failed with error: ${error.message}`);
     console.error(error);
   }
