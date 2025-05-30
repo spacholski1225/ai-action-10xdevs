@@ -23680,43 +23680,230 @@ import_main.default.config();
 /**
 * Performs an AI code review on a PR diff using Anthropic's Claude model
 * @param {string} prDiff The PR diff to review
+* @param {Object} fileContents Map of file paths to their full content
 * @param {string} apiKey Anthropic API key
+* @param {Object} options Additional options
 * @returns {Promise<string>} The AI review feedback
 */
-async function performAICodeReview(prDiff, apiKey) {
+async function performAICodeReview(prDiff, fileContents = {}, apiKey, options = {}) {
 	if (!prDiff) throw new Error("PR diff is empty or not provided");
 	if (!apiKey) throw new Error("Anthropic API key is required");
+	const { model, maxTokens = 5e3 } = options;
+	if (!model) throw new Error("Model must be provided in options");
 	const anthropic = new Anthropic({ apiKey });
+	let fileContextSection = "";
+	if (Object.keys(fileContents).length > 0) fileContextSection = `
+    <existing_files>
+    ${Object.entries(fileContents).map(([path$7, content]) => `
+      <file path="${path$7}">
+      ${content}
+      </file>
+    `).join("\n")}
+    </existing_files>
+    `;
 	try {
-		const response = await anthropic.messages.create({
-			model: "claude-3-5-haiku-20241022",
-			max_tokens: 1e3,
+		const requestPayload = {
+			model,
+			max_tokens: maxTokens,
 			messages: [{
 				role: "user",
-				content: `You are a senior software engineer reviewing a pull request.
-        Conduct a thorough review of the PR based on provided diff.
+				content: `You are a senior software engineer tasked with reviewing a pull request. Your goal is to conduct a thorough review based on the provided file context and pull request diff, focusing on specific areas and adhering to given code standards.
 
-        The PR diff is:
+First, review the context of the existing files:
 
-        <diff>
-        ${prDiff}
-        </diff>
+<file_context>
+${fileContextSection}
+</file_context>
 
-        Focus on the following:
-        - Code readability - is the code easy to understand?
-        - Code performance - is the code efficient?
-        - Code style - is the code style consistent?
-        - Code duplication - is the code duplicated?
-        - Code quality - is the code of high quality?
+Now, examine the pull request diff:
 
-        You are allowed to use "N/A" for cases where the PR does not bring any changes in given area.`
+<pr_diff>
+${prDiff}
+</pr_diff>
+
+In your review, focus on the following areas:
+
+1. Code readability
+2. Code performance
+3. Code style
+4. Code duplication
+5. Code quality
+6. Consistency with existing files
+
+When reviewing, keep in mind these naming conventions:
+
+- File names: kebab-case (e.g., kebab-case-example)
+- Classes and interfaces: PascalCase (e.g., ExampleClass)
+- Variables and fields: camelCase (e.g., exampleVariable)
+- Interfaces with required methods: Start with 'I' (e.g., IValidation), except for request-response models
+- Non-exported functions and methods: camelCase (e.g., doSmth())
+- Exported functions and methods: PascalCase (e.g., DoSmth())
+- Parameters shared with SE API: under_score (e.g., client_id)
+- Constant variables: UPPER_SCORE (e.g., MAX_WEIGHT)
+
+Also, consider these good code practices:
+
+- Use strong types when possible
+- Use const and let, never var
+- Don't mix await/async with Promise().Then().Catch()
+- Use === and !== instead of == or !=
+- Use assignment operators (+, +=) instead of concat()
+- Use shorter forms to check null or empty string values
+- Use null safe access pointer '?'
+- Create const functions instead of statement functions
+- Keep communication models and third-party connector helpers outside main SE Connect methods
+- Remove unused imports and packages
+
+Before providing your final review, break down your thought process for each focus area in <code_review_analysis> tags. For each area:
+a. List relevant code snippets or line numbers
+b. Identify potential issues
+c. Suggest improvements based on the given standards and practices
+
+After analyzing all areas, summarize the most critical issues found across all areas. This analysis will help ensure a thorough interpretation of the code.
+
+In your final review, use markdown formatting to structure your feedback. Only include areas where improvements are needed. If an area doesn't require changes, omit it from your review. Be specific in your feedback, referencing line numbers or code snippets when applicable. Provide clear suggestions for improvement based on the given code standards and best practices.
+
+Here's an example of how your final review should be structured in markdown:
+
+\`\`\`markdown
+# Pull Request Review
+
+## Code Readability
+[Your feedback and suggestions for improvement]
+
+## Code Performance
+[Your feedback and suggestions for improvement]
+
+...
+
+## Consistency with Existing Files
+[Your feedback and suggestions for improvement]
+
+\`\`\`
+
+Please proceed with your analysis and review of the pull request.`
 			}]
-		});
-		return response.content[0].text;
+		};
+		console.log("=== ANTHROPIC API REQUEST ===");
+		console.log("Model:", requestPayload.model);
+		console.log("Max tokens:", requestPayload.max_tokens);
+		console.log("Message role:", requestPayload.messages[0].role);
+		console.log("Message content length:", requestPayload.messages[0].content.length);
+		console.log("Full request payload:", JSON.stringify(requestPayload, null, 2));
+		console.log("=== END REQUEST ===");
+		const response = await anthropic.messages.create(requestPayload);
+		console.log("=== ANTHROPIC API RESPONSE ===");
+		console.log("Response ID:", response.id);
+		console.log("Response model:", response.model);
+		console.log("Response type:", response.type);
+		console.log("Response role:", response.role);
+		console.log("Usage:", JSON.stringify(response.usage, null, 2));
+		console.log("Content length:", response.content[0].text.length);
+		console.log("Full response:", JSON.stringify(response, null, 2));
+		console.log("=== END RESPONSE ===");
+		const filteredResponse = response.content[0].text.replace(/<code_review_analysis>[\s\S]*?<\/code_review_analysis>/g, "");
+		return filteredResponse;
 	} catch (error$1) {
 		console.error("Error during AI review:", error$1);
 		throw error$1;
 	}
+}
+
+//#endregion
+//#region src/context-manager.js
+/**
+* Extract modified files from a PR diff
+* @param {string} diff The PR diff content
+* @returns {string[]} Array of modified file paths
+*/
+function extractModifiedFiles(diff) {
+	const filePathRegex = /^diff --git a\/(.*?) b\/(.*?)$/gm;
+	const modifiedFiles = new Set();
+	let match;
+	while ((match = filePathRegex.exec(diff)) !== null) modifiedFiles.add(match[1]);
+	return Array.from(modifiedFiles);
+}
+/**
+* Get file content from GitHub repository
+* @param {Object} params Parameters object
+* @param {Object} params.octokit Octokit instance
+* @param {string} params.owner Repository owner
+* @param {string} params.repo Repository name
+* @param {string} params.path File path
+* @param {string} params.ref Git reference (default: 'HEAD')
+* @param {number} params.maxLines Maximum lines to include (default: 500)
+* @returns {Promise<string>} File content
+*/
+async function getFileContent({ octokit, owner, repo, path: path$7, ref = "HEAD", maxLines = 500 }) {
+	try {
+		const response = await octokit.rest.repos.getContent({
+			owner,
+			repo,
+			path: path$7,
+			ref
+		});
+		const content = Buffer.from(response.data.content, "base64").toString();
+		const lines = content.split("\n");
+		if (lines.length > maxLines) return lines.slice(0, maxLines).join("\n") + `\n\n// File truncated to ${maxLines} lines. Complete file has ${lines.length} lines.`;
+		return content;
+	} catch (error$1) {
+		console.warn(`Cannot retrieve file content for ${path$7}: ${error$1.message}`);
+		return `// Cannot retrieve file content: ${error$1.message}`;
+	}
+}
+/**
+* Estimate token count (Claude uses ~4 characters per token)
+* @param {string} text Text to estimate tokens for
+* @returns {number} Estimated token count
+*/
+function estimateTokenCount(text) {
+	return Math.ceil(text.length / 4);
+}
+/**
+* Manage context to stay within token limits
+* @param {Object} params Parameters object
+* @param {string} params.diff PR diff content
+* @param {Object} params.fileContents Map of file paths to their content
+* @param {number} params.modelMaxTokens Maximum tokens for the model (default: 200000)
+* @param {number} params.safetyFactor Safety factor to stay below limits (default: 0.9)
+* @returns {Object} Optimized context with diff and file contents
+*/
+function optimizeContext({ diff, fileContents, modelMaxTokens = 2e5, safetyFactor = .9 }) {
+	const tokenLimit = modelMaxTokens * safetyFactor;
+	const diffTokens = estimateTokenCount(diff);
+	let remainingTokens = tokenLimit - diffTokens;
+	const basePromptTokens = 1e3;
+	remainingTokens -= basePromptTokens;
+	if (remainingTokens <= 0) {
+		console.warn("Diff alone exceeds token limit, no room for file context");
+		return {
+			diff,
+			fileContents: {},
+			estimatedTokens: diffTokens + basePromptTokens
+		};
+	}
+	const sortedFiles = Object.entries(fileContents).sort(([, contentA], [, contentB]) => estimateTokenCount(contentA) - estimateTokenCount(contentB));
+	const optimizedFileContents = {};
+	for (const [path$7, content] of sortedFiles) {
+		const contentTokens = estimateTokenCount(content);
+		if (contentTokens <= remainingTokens) {
+			optimizedFileContents[path$7] = content;
+			remainingTokens -= contentTokens;
+		} else if (remainingTokens > 500) {
+			const truncatedContent = content.substring(0, remainingTokens * 4);
+			optimizedFileContents[path$7] = truncatedContent + "\n\n// File truncated due to token limitations";
+			remainingTokens = 0;
+			break;
+		} else {
+			console.warn(`Skipping file ${path$7} due to token limitations`);
+			break;
+		}
+	}
+	return {
+		diff,
+		fileContents: optimizedFileContents,
+		estimatedTokens: tokenLimit - remainingTokens
+	};
 }
 
 //#endregion
@@ -23728,6 +23915,14 @@ async function run() {
 	try {
 		const githubToken = process.env.GITHUB_TOKEN;
 		const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
+		const maxFileLines = parseInt(process.env.MAX_FILE_LINES || "500", 10);
+		const modelName = process.env.MODEL_NAME || "claude-3-5-haiku-20241022";
+		const safetyFactor = parseFloat(process.env.CONTEXT_SAFETY_FACTOR || "0.9");
+		const MODEL_TOKEN_LIMITS = {
+			"claude-3-5-haiku-20241022": 2e5,
+			"claude-sonnet-4-20250514": 2e5
+		};
+		const modelMaxTokens = MODEL_TOKEN_LIMITS[modelName] || 1e5;
 		if (!githubToken) throw new Error("GITHUB_TOKEN is required");
 		if (!anthropicApiKey) throw new Error("ANTHROPIC_API_KEY is required");
 		const prNumber = extractPRNumber();
@@ -23739,7 +23934,32 @@ async function run() {
 			repo,
 			prNumber
 		});
-		const reviewText = await performAICodeReview(diff, anthropicApiKey);
+		const modifiedFiles = extractModifiedFiles(diff);
+		console.log(`Found ${modifiedFiles.length} modified files in diff`);
+		const octokit = (0, import_github.getOctokit)(githubToken);
+		const fileContentsMap = {};
+		for (const filePath of modifiedFiles) try {
+			const content = await getFileContent({
+				octokit,
+				owner,
+				repo,
+				path: filePath,
+				ref: prNumber ? `HEAD~1` : "HEAD~1",
+				maxLines: maxFileLines
+			});
+			fileContentsMap[filePath] = content;
+			console.log(`Retrieved content for ${filePath} (${content.length} bytes)`);
+		} catch (error$1) {
+			console.warn(`Error retrieving content for ${filePath}: ${error$1.message}`);
+		}
+		const { diff: optimizedDiff, fileContents: optimizedFileContents } = optimizeContext({
+			diff,
+			fileContents: fileContentsMap,
+			modelMaxTokens,
+			safetyFactor
+		});
+		console.log(`Optimized context with ${Object.keys(optimizedFileContents).length} files`);
+		const reviewText = await performAICodeReview(optimizedDiff, optimizedFileContents, anthropicApiKey, { model: modelName });
 		if (prNumber) await commentOnPR({
 			token: githubToken,
 			owner,

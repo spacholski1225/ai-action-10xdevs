@@ -11,6 +11,18 @@ branding:
 inputs:
   ANTHROPIC_API_KEY:
     description: "Anthropic Studio API Key"
+  MAX_FILE_LINES:
+    description: "Maximum number of lines to include from each file"
+    required: false
+    default: "500"
+  MODEL_NAME:
+    description: "Anthropic model to use"
+    required: false
+    default: "claude-sonnet-4-20250514"
+  CONTEXT_SAFETY_FACTOR:
+    description: "Percentage of token limit to use (0-1)"
+    required: false
+    default: "0.9"
 
 # Action steps
 runs:
@@ -23,3 +35,6 @@ runs:
       env:
         ANTHROPIC_API_KEY: ${{ inputs.ANTHROPIC_API_KEY }}
         GITHUB_TOKEN: ${{ github.token }}
+        MAX_FILE_LINES: ${{ inputs.MAX_FILE_LINES }}
+        MODEL_NAME: ${{ inputs.MODEL_NAME }}
+        CONTEXT_SAFETY_FACTOR: ${{ inputs.CONTEXT_SAFETY_FACTOR }}
